@@ -111,12 +111,8 @@ class LiFT_dataset:
         pose_orig = np.linalg.inv(self.camera_pose) @ np.loadtxt(
             self.poses_paths[index]
         )
-        camera_rot = np.copy(self.pose0)
-        camera_rot[-1, :3] = np.array([0.0, 0.0, 0.1])
-        pose_orig = pose_orig @ camera_rot.T
-        pose = np.linalg.inv(pose_orig)
 
-        return index, color_data, depth_data, pose
+        return index, color_data, depth_data, pose_orig
 
 
 class Replica(BaseDataset):
@@ -373,3 +369,7 @@ def get_dataset(dataset_name: str):
     elif dataset_name == "LiFT_dataset":
         return LiFT_dataset
     raise NotImplementedError(f"Dataset {dataset_name} not implemented")
+
+
+if __name__ == "__main__":
+    pass
