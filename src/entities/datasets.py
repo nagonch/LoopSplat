@@ -95,6 +95,12 @@ class LiFT_dataset:
         self.fovx = 2 * math.atan(self.width / (2 * self.fx))
         self.fovy = 2 * math.atan(self.height / (2 * self.fy))
         self.pose0 = np.linalg.inv(self.camera_pose) @ np.loadtxt(self.poses_paths[0])
+        self.poses = np.stack(
+            [
+                np.linalg.inv(self.camera_pose) @ np.loadtxt(pose_path)
+                for pose_path in self.poses_paths
+            ]
+        )
 
     def __len__(self):
         return len(self.color_paths)
