@@ -76,11 +76,6 @@ class EOAT_Dataset:
         self.fy = self.intrinsics[1, 1]
         self.cx = self.intrinsics[0, 2]
         self.cy = self.intrinsics[1, 2]
-        print(self.fx)
-        print(self.fy)
-        print(self.cx)
-        print(self.cy)
-        raise
 
         with Image.open(self.color_paths[0]) as img:
             self.width, self.height = img.size
