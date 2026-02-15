@@ -1,5 +1,5 @@
-project_name: "LoopSplat_SLAM_LiFT_dataset"
-dataset_name: "LiFT_dataset"
+project_name: "LoopSplat_SLAM_ycbv_lf"
+dataset_name: "ycbv_lf"
 checkpoint_path: null
 use_wandb: True
 frame_limit: -1 # for debugging, set to -1 to disable
