@@ -52,6 +52,118 @@ class BaseDataset(torch.utils.data.Dataset):
         return len(self.color_paths) if self.frame_limit < 0 else int(self.frame_limit)
 
 
+class EOAT_Dataset:
+
+    def __init__(self, dataset_config):
+        self.dataset_path = dataset_config["input_path"]
+        self.dataset_config = dataset_config
+        self.rgb_dir = os.path.join(self.dataset_path, "rgb")
+        self.depth_dir = os.path.join(self.dataset_path, "depth")
+        self.poses_dir = os.path.join(self.dataset_path, "annotated_poses")
+
+        self.color_paths = sorted(
+            [os.path.join(self.rgb_dir, f) for f in os.listdir(self.rgb_dir)]
+        )
+        self.depth_paths = sorted(
+            [os.path.join(self.depth_dir, f) for f in os.listdir(self.depth_dir)]
+        )
+        self.poses_paths = sorted(
+            [os.path.join(self.poses_dir, f) for f in os.listdir(self.poses_dir)]
+        )
+
+        self.intrinsics = np.loadtxt(os.path.join(self.dataset_path, "cam_K.txt"))
+        self.fx = self.intrinsics[0, 0]
+        self.fy = self.intrinsics[1, 1]
+        self.cx = self.intrinsics[0, 2]
+        self.cy = self.intrinsics[1, 2]
+        print(self.fx)
+        print(self.fy)
+        print(self.cx)
+        print(self.cy)
+        raise
+
+        with Image.open(self.color_paths[0]) as img:
+            self.width, self.height = img.size
+        self.depth_scale = 1000.0
+        self.poses = np.stack([np.loadtxt(p) for p in self.poses_paths])
+
+    def __len__(self):
+        return len(self.color_paths)
+
+    def __getitem__(self, index):
+        color = cv2.imread(self.color_paths[index])
+        color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
+
+        depth = (
+            cv2.imread(self.depth_paths[index], cv2.IMREAD_UNCHANGED).astype(np.float32)
+            / self.depth_scale
+        )
+        pose = self.poses[index].astype(np.float32)
+
+        return index, color, depth, pose
+
+
+class YCBV_LF_Dataset:
+
+    def __init__(self, dataset_config):
+        self.dataset_path = dataset_config["input_path"]
+        self.dataset_config = dataset_config
+        camera_pose_dir = os.path.join(self.dataset_path, "camera_poses")
+        self.camera_poses_paths = sorted(
+            [os.path.join(camera_pose_dir, f) for f in os.listdir(camera_pose_dir)]
+        )
+        self.n_cameras = len(self.camera_poses_paths)
+        self.camera_pose = np.loadtxt(self.camera_poses_paths[self.n_cameras // 2])
+        self.intrinsics = np.loadtxt(
+            os.path.join(self.dataset_path, "camera_matrix.txt")
+        )
+        self.fx = self.intrinsics[0, 0]
+        self.fy = self.intrinsics[1, 1]
+        self.cx = self.intrinsics[0, 2]
+        self.cy = self.intrinsics[1, 2]
+        self.depth_dir = os.path.join(self.dataset_path, "depth")
+        self.depth_paths = sorted(
+            [os.path.join(self.depth_dir, f) for f in os.listdir(self.depth_dir)]
+        )
+        self.object_poses_dir = os.path.join(self.dataset_path, "object_poses")
+        self.poses_paths = sorted(
+            [
+                os.path.join(self.object_poses_dir, f)
+                for f in os.listdir(self.object_poses_dir)
+            ]
+        )
+        self.LF_paths = sorted(
+            [
+                os.path.join(self.dataset_path, f)
+                for f in os.listdir(self.dataset_path)
+                if "LF_" in f
+            ]
+        )
+        mid_id = self.n_cameras // 2
+        self.color_paths = [
+            os.path.join(lf, f"{mid_id:04d}.png") for lf in self.LF_paths
+        ]
+        with Image.open(self.color_paths[0]) as img:
+            self.width, self.height = img.size
+        self.depth_scale = 1000.0
+        self.poses = np.stack(
+            [np.linalg.inv(self.camera_pose) @ np.loadtxt(p) for p in self.poses_paths]
+        )
+
+    def __len__(self):
+        return len(self.color_paths)
+
+    def __getitem__(self, index):
+        color = cv2.imread(self.color_paths[index])
+        color = cv2.cvtColor(color, cv2.COLOR_BGR2RGB)
+        depth = (
+            cv2.imread(self.depth_paths[index], cv2.IMREAD_UNCHANGED).astype(np.float32)
+            / self.depth_scale
+        )
+        pose = self.poses[index].astype(np.float32)
+        return index, color, depth, pose
+
+
 class LiFT_dataset:
     def __init__(self, dataset_config):
         print("LF DATASET!")
@@ -374,6 +486,10 @@ def get_dataset(dataset_name: str):
         return ScanNetPP
     elif dataset_name == "LiFT_dataset":
         return LiFT_dataset
+    elif dataset_name == "ycbv_lf":
+        return YCBV_LF_Dataset
+    elif dataset_name == "ycbv_in_eoat":
+        return EOAT_Dataset
     raise NotImplementedError(f"Dataset {dataset_name} not implemented")
 
 

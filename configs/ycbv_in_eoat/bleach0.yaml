@@ -1,0 +1,14 @@
+inherit_from: configs/ycbv_in_eoat/ycbv_in_eoat.yaml
+data:
+  scene_name: bleach0
+  input_path: datasets/ycbv_in_eoat/bleach0/
+  output_path: output/ycbv_in_eoat/bleach0/
+cam:  # intrinsics don't matter, read from a file
+  H: 480
+  W: 640
+  fx: 319.5820007324219
+  fy: 417.1186828613281
+  cx: 320.21498476769557
+  cy: 244.34866808710467
+  crop_edge: 0
+  distortion: [0, 0, 0, 0, 0]
